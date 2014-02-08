@@ -6,25 +6,33 @@ prm
 
 Mod_Filter {
 
-  var <>lowPass, <>highPass, <>bandPass;
+  var server, group;
+
+  var lowPass, highPass, bandPass;
+
+  var <lowPassInBus, <highPassInBus, <bandPassInBus;
   var <lowPassOutBus, <highPassOutBus, <bandPassOutBus, <nilBus;
-  var <masterCutoff, <masterRes, <masterAmp;
-  var <lowPassCutoff, <highPassCutoff, <bandPassCenterFreq;
-  var <lowPassRes, <highPassRes, <bandPassRes;
-  var <lowPassAmp, <highPassAmp, <bandPassAmp;
+  var lowPassCutoffModBus, highPassCutoffModBus, bandPassCutoffModBus;
+  var lowPassResModBus, highPassResModBus, bandPassResModBus;
+
+  var masterCutoff, masterRes, masterAmp;
+  var lowPassCutoff, highPassCutoff, bandPassCenterFreq;
+  var lowPassRes, highPassRes, bandPassRes;
+  var lowPassAmp, highPassAmp, bandPassAmp;
 
   *new { | cutoff, res, amp |
     ^super.new.prInit(cutoff, res, amp);
   }
 
   prInit { | cutoff, res, amp |
-    {
+    server = Server.default;
+    server.waitForBoot {
       this.prMakeSynthDefs;
-      Server.default.sync;
+      server.sync;
       this.prMakeBusses;
-      Server.default.sync;
+      server.sync;
       this.prMakeSynths(cutoff, res, amp);
-    }.fork;
+    };
   }
 
   free {
@@ -132,16 +140,42 @@ Mod_Filter {
   }
 
   prMakeBusses {
+    lowPassInBus = Bus.audio;
+    highPassInBus = Bus.audio;
+    bandPassInBus = Bus.audio;
+
     lowPassOutBus = Bus.audio;
     highPassOutBus = Bus.audio;
     bandPassOutBus = Bus.audio;
+
+    lowPassCutoffModBus = Bus.audio;
+    highPassCutoffModBus = Bus.audio;
+    bandPassCutoffModBus = Bus.audio;
+
+    lowPassResModBus = Bus.audio;
+    highPassResModBus = Bus.audio;
+    bandPassResModBus = Bus.audio;
+
     nilBus = Bus.audio;
   }
 
   prFreeBusses {
+    lowPassInBus.free;
+    highPassInBus.free;
+    bandPassInBus.free;
+
     lowPassOutBus.free;
     highPassOutBus.free;
     bandPassOutBus.free;
+
+    lowPassCutoffModBus.free;
+    highPassCutoffModBus.free;
+    bandPassCutoffModBus.free;
+
+    lowPassResModBus.free;
+    highPassResModBus.free;
+    bandPassResModBus.free;
+
     nilBus.free;
   }
 
@@ -162,11 +196,11 @@ Mod_Filter {
     highPassAmp = masterAmp;
     bandPassAmp = masterAmp;
 
-    lowPass = Synth(\mod_lowPass, [\in, nilBus, \out, lowPassOutBus, \amp, lowPassAmp, \cutoff, lowPassCutoff,
+    lowPass = Synth(\mod_lowPass, [\in, lowPassInBus, \out, lowPassOutBus, \amp, lowPassAmp, \cutoff, lowPassCutoff,
       \res, lowPassRes]);
-    highPass = Synth(\mod_highPass, [\in, nilBus, \out, highPassOutBus, \amp, highPassAmp, \cutoff, highPassCutoff,
+    highPass = Synth(\mod_highPass, [\in, highPassInBus, \out, highPassOutBus, \amp, highPassAmp, \cutoff, highPassCutoff,
       \res, highPassRes]);
-    bandPass = Synth(\mod_bandPass, [\in, nilBus, \out, bandPassOutBus, \amp, bandPassAmp, \centerFreq, bandPassCenterFreq,
+    bandPass = Synth(\mod_bandPass, [\in, bandPassInBus, \out, bandPassOutBus, \amp, bandPassAmp, \centerFreq, bandPassCenterFreq,
       \res, bandPassRes]);
   }
 
