@@ -9,7 +9,7 @@ Mod {
   var server;
   var group;
   var <patchDict;
-  var outDict, oscDict, filterDict, envDict, effectDict, miscDict;
+  var <outDict, <oscDict, <filterDict, <envDict, <effectDict, <miscDict;
 
   *new {
     ^super.new.prInit;
