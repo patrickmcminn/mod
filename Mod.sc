@@ -19,7 +19,6 @@ Mod {
     server = Server.default;
     server.waitForBoot {
       this.prMakeDicts;
-
     };
   }
 
@@ -35,50 +34,48 @@ Mod {
 
   //////// public functions:
 
-  addModule { | module, name = 'name', type = 'osc' |
+  addOscModule { | name = 'osc', type = 'sine', freq = 220, amp = 0.2 |
     switch(type,
-      { 'osc' }, { oscDict[name] = module },
-      { 'out' }, { outDict[name] = module },
-      { 'filter' }, { filterDict[name] = module },
-      { 'env' }, { envDict[name] = module },
-      { 'effect' }, { effectDict[name] = module },
-      { 'misc' }, { miscDict[name] = module }
+      { 'sine' }, { oscDict[name] = Mod_SinOsc.new(freq, amp); },
+      { 'tri' }, { oscDict[name] = Mod_TriOsc.new(freq, amp); },
+      { 'square' }, { oscDict[name] = Mod_SquareOsc.new(freq, amp); },
+      { 'saw' }, { oscDict[name] = Mod_SawOsc.new(freq, amp); },
+      { 'noise' }, { oscDict[name] = Mod_NoiseOsc.new(amp); }
     );
   }
 
-  addOscModule { | module, name = 'name' |
-    this.addModule(module, name, 'osc');
+  addSineOscModule { | name = 'sine', freq = 220, amp = 0.2 |
+    this.addOscModule(name, 'sine', freq, amp);
   }
 
-  addOutModule { | module, name = 'name' |
-    this.addModule(module, name, 'out');
+  addTriOscModule { | name = 'tri', freq = 220, amp = 0.2 |
+    this.addOscModule(name, 'tri', freq, amp);
   }
 
-  addFilterModule { | module, name = 'name' |
-    this.addModule(module, name, 'filter');
+  addSquareOscModule { | name = 'square', freq = 220, amp = 0.2 |
+    this.addOscModule(name, 'square', freq, amp);
   }
 
-  addEnvModule { | module, name = 'name' |
-    this.addModule(module, name, 'env');
+  addSawOscModule { | name = 'saw', freq = 220, amp = 0.2 |
+    this.addOscModule(name, 'saw', freq, amp);
   }
 
-  addEffectModule { | module, name = 'name' |
-    this.addModule(module, name, 'effect');
+  addNoiseOscModule { | name = 'noise', amp = 0.2 |
+    this.addOscModule(name, 'noise', 220, amp);
   }
 
-  addMiscModule { | module, name = 'name' |
-    this.addModule(module, name, 'misc');
+  addOutModule { | name, outBus = 0, amp = 1 |
+    outDict[name] = Mod_Out.new(outBus, amp);
   }
-
 
   module { | name = 'name', type = 'osc' |
     switch(type,
       { 'osc' }, { ^oscDict[name] },
       { 'out' }, { ^outDict[name] },
-      { 'filter' }, { ^filterDict[name] },
-      { 'env' }, { ^envDict[name] },
-      { 'effect' }, { ^effectDict[name] },
-      { 'misc' }, { ^miscDict[name] }
+      //{ 'filter' }, { ^filterDict[name] },
+      //{ 'env' }, { ^envDict[name] },
+      //{ 'effect' }, { ^effectDict[name] },
+      //{ 'misc' }, { ^miscDict[name] }
     );
   }
 
@@ -86,13 +83,81 @@ Mod {
 
   outModule { | name | ^this.module(name, 'out'); }
 
-  filterModule { | name | ^this.module(name, 'filter'); }
+  //filterModule { | name | ^this.module(name, 'filter'); }
 
-  envModule { | name | ^this.module(name, 'env'); }
+  //envModule { | name | ^this.module(name, 'env'); }
 
-  effectModule { | name | ^this.module(name, 'effect'); }
+  //effectModule { | name | ^this.module(name, 'effect'); }
 
-  miscModule { | name | ^this.module(name, 'misc'); }
+  //miscModule { | name | ^this.module(name, 'misc'); }
+
+
+  /*
+  connect { | inputMod, outputMod |
+    var connectInDict, connectOutDict;
+    var inputStringArray, inputDict, inputModule, inputParam;
+    var outputStringArray, outputDict, outputModule, outputParam;
+    var keyString, input, output;
+
+    inputStringArray = inputMod.asString.split($.);
+    outputStringArray = outputMod.asString.split($.);
+
+    inputDict = inputStringArray[0];
+    inputModule = inputStringArray[1];
+    inputParam = `inputStringArray[2].asSymbol;
+
+    outputDict = outputStringArray[0];
+    outputModule = outputStringArray[1];
+    outputParam = outputStringArray[2];
+
+    switch(inputDict.asSymbol,
+      { 'out' }, { connectInDict = outDict[inputModule.asSymbol]; },
+      { 'osc' }, { connectInDict = oscDict }
+    );
+    switch(outputDict.asSymbol,
+      { 'out' }, { connectOutDict = outDict },
+      { 'osc' }, { connectOutDict = oscDict }
+    );
+
+    inputParam.postln;
+    //(outDict[inputModule.asSymbol].(`inputStringArray[2])).postln;
+    //("connectInDict" ++ "[" ++ inputModule.asSymbol ++ "]" ++ "." ++ (inputParam.asSymbol)).interpret.postln;
+    connectOutDict[outputModule.asSymbol];
+
+    //input = (connectInDict ++ "['" ++ inputModule ++ "']" ++ "." ++ inputParam);
+    //output = (connectOutDict ++ "['" ++ outputModule ++ "']" ++ "." ++ outputParam);
+    //keyString = (inputMod ++ outputMod).asSymbol;
+
+    //input.postln;
+    //output.postln;
+
+    //patchDict[keyString] = Mod_Patch.new(input.interpret, output.interpret);
+  }
+
+  disconnect { | inputMod, outputMod |
+    var inputStringArray, inputDict, inputModule, inputParam;
+    var outputStringArray, outputDict, outputModule, outputParam;
+    var keyString, input, output;
+
+    inputStringArray = inputMod.asString.split($.);
+    outputStringArray = outputMod.asString.split($.);
+
+    inputDict = inputStringArray[0];
+    inputModule = inputStringArray[1];
+    inputParam = inputStringArray[2];
+    input = (inputDict ++ "Dict" ++ "['" ++ inputModule ++ "']" ++ "." ++ inputParam);
+
+    outputDict = outputStringArray[0];
+    outputModule = outputStringArray[1];
+    outputParam = outputStringArray[2];
+    output = (outputDict ++ "Dict" ++ "['" ++ outputModule ++ "']" ++ "." ++ outputParam);
+
+    keyString = (inputMod ++ outputMod).asSymbol;
+
+    patchDict[keyString].free;
+    patchDict[keyString] = nil;
+  }
+  */
 
   connect { | inputModule, outputModule |
     var keyString = (inputModule.asSymbol ++ outputModule.asSymbol).asSymbol;
